@@ -78,6 +78,7 @@ class _HomeState extends State<Home> {
                     ),
                   if (pinnedTasksWidget.isNotEmpty)
                     StaggeredGrid.count(
+                        key: ValueKey(pinnedTasksWidget.length),
                         crossAxisCount: 2,
                         mainAxisSpacing: 4,
                         crossAxisSpacing: 4,
@@ -92,6 +93,7 @@ class _HomeState extends State<Home> {
                     ),
                   if (unpinnedTaskWidget.isNotEmpty)
                     StaggeredGrid.count(
+                        key: ValueKey(unpinnedTaskWidget.length),
                         crossAxisCount: 2,
                         mainAxisSpacing: 4,
                         crossAxisSpacing: 4,
@@ -166,6 +168,7 @@ class CardTask extends StatelessWidget {
                   if (task.tasks != null)
                     SizedBox(
                       child: TodoLists(
+                        key: ValueKey(task.id),
                         isEditable: false,
                         idTask: task.id!,
                         list: task.tasks,

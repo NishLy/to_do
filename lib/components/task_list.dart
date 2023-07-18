@@ -99,6 +99,7 @@ class _TodoListsState extends State<TodoLists> {
                       ),
                   itemBuilder: (context, index) {
                     return TodoField(
+                        key: ValueKey(uncheckedTodos[index].id),
                         index: index,
                         isReadonly: widget.isEditable ? true : false,
                         todo: uncheckedTodos[index],
@@ -136,6 +137,7 @@ class _TodoListsState extends State<TodoLists> {
                           TextEditingController();
                       oldTaskController.text = checkedTodos[index].title;
                       return TodoField(
+                          key: ValueKey(checkedTodos[index].id),
                           index: index,
                           isReadonly: widget.isEditable ? true : false,
                           todo: checkedTodos[index],
@@ -248,8 +250,10 @@ class _TodoFieldState extends State<TodoField> {
           readOnly: widget.isReadonly ? false : true,
           keyboardType: TextInputType.text,
           controller: oldTaskController,
-          style: todo.isChecked
-              ? null
+          style: !todo.isChecked
+              ? const TextStyle(
+                  overflow: TextOverflow.ellipsis,
+                )
               : const TextStyle(
                   overflow: TextOverflow.ellipsis,
                   decoration: TextDecoration.lineThrough),
