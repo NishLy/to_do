@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:to_do/components/drawer.dart';
 import 'package:to_do/components/task_list.dart';
 import 'package:to_do/helpers/tasks.dart';
 import 'package:to_do/model/task.dart';
@@ -26,6 +27,8 @@ class _HomeState extends State<Home> {
       _tasks = DatabaseTaskHelper.instance.getTaskList();
     });
   }
+
+  void _onChangeFilterLabel(String label) {}
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +105,7 @@ class _HomeState extends State<Home> {
                     builder: (context) => const AddAndEditTask()));
           },
           child: const Icon(Icons.add)),
+      drawer: MainDrawer(onChangeLabelFilter: _onChangeFilterLabel),
     );
   }
 }

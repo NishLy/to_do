@@ -26,6 +26,7 @@ class DatabaseTaskHelper {
   String colCreateAt = 'createdAt';
   String colUpdatedAt = 'updatedAt';
   String colNote = 'note';
+  String labels = 'labels';
 
   void _createDb(Database db, int version) async {
     await db.execute(
