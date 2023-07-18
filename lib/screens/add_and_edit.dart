@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:to_do/components/task_list.dart';
 import 'package:intl/intl.dart';
+import 'package:to_do/screens/label.dart';
 import '../helpers/tasks.dart';
 import '../model/task.dart';
 
@@ -298,7 +299,12 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
                                   height: 20,
                                 ),
                                 GestureDetector(
-                                  onTap: () {},
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LabelListEditMode(),
+                                      )),
                                   child: Row(
                                     children: const [
                                       Icon(Icons.label_outline_rounded),

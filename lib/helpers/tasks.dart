@@ -44,7 +44,18 @@ class DatabaseTaskHelper {
       );
     }
 
+    void createLabelTable() async {
+      String labelTabel = 'labels_table';
+      String colId = 'id';
+      String colTitle = 'title';
+
+      await db.execute(
+        'CREATE TABLE $labelTabel($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colTitle TEXT NOT NULL)',
+      );
+    }
+
     createTodoTable();
+    createLabelTable();
   }
 
   Future<Database> _initDb() async {

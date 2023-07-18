@@ -41,52 +41,86 @@ class _LabelListState extends State<LabelListEditMode> {
     setState(() {
       DatabaseLabelHelper.instance.insertLabel(label);
       _labels = DatabaseLabelHelper.instance.getAllLabels();
+      isNewLabelFocus = false;
+      newLabelController.text = "";
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        FocusScope(
-            onFocusChange: (value) => setState(() {
-                  isNewLabelFocus = value;
-                }),
-            child: ListTile(
-              leading: const Icon(Icons.add),
-              title: TextField(
-                controller: newLabelController,
-              ),
-              trailing: isNewLabelFocus
-                  ? IconButton(
-                      onPressed: (() =>
-                          _onCreteLabel(Label(title: newLabelController.text))),
-                      icon: const Icon(Icons.check))
-                  : null,
+    return Scaffold(
+        appBar: AppBar(
+            title: const Text("Edit Labels"),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             )),
-        FutureBuilder(
-            future: _labels,
-            builder: ((context, snapshot) {
-              if (snapshot.hasData) {
-                return ListView.separated(
-                  itemBuilder: (context, index) => LabelTile.editMode(
-                    label: snapshot.data![index],
-                    onChange: _onChangeLabel,
-                    onDelete: _onDeleteLabel,
+        body: Column(
+          children: [
+            const SizedBox(
+              height: 10,
+            ),
+            FocusScope(
+                onFocusChange: (value) => setState(() {
+                      isNewLabelFocus = value;
+                    }),
+                child: ListTile(
+                  shape: !isNewLabelFocus
+                      ? null
+                      : const Border(
+                          top: BorderSide(),
+                          bottom: BorderSide(),
+                        ),
+                  leading: isNewLabelFocus
+                      ? IconButton(
+                          onPressed: (() => setState(() {
+                                isNewLabelFocus = false;
+                              })),
+                          icon: const Icon(Icons.close_rounded))
+                      : const Icon(Icons.add),
+                  title: TextField(
+                    maxLength: 30,
+                    decoration: const InputDecoration(
+                        counterText: '',
+                        border: InputBorder.none,
+                        hintText: "Add new label"),
+                    controller: newLabelController,
                   ),
-                  itemCount: snapshot.data!.length,
-                  separatorBuilder: (context, index) => const SizedBox(
-                    height: 5,
-                  ),
-                );
-              }
+                  trailing: isNewLabelFocus
+                      ? IconButton(
+                          onPressed: (() => _onCreteLabel(
+                              Label(title: newLabelController.text))),
+                          icon: const Icon(Icons.check))
+                      : null,
+                )),
+            Expanded(
+                child: FutureBuilder(
+                    future: _labels,
+                    builder: ((context, snapshot) {
+                      if (snapshot.hasData) {
+                        return ListView.separated(
+                          itemBuilder: (context, index) => LabelTile.editMode(
+                            key: ValueKey(snapshot.data![index].id),
+                            label: snapshot.data![index],
+                            onChange: _onChangeLabel,
+                            isEditMode: true,
+                            onDelete: _onDeleteLabel,
+                          ),
+                          itemCount: snapshot.data!.length,
+                          separatorBuilder: (context, index) => const SizedBox(
+                            height: 5,
+                          ),
+                        );
+                      }
 
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }))
-      ],
-    );
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    })))
+          ],
+        ));
   }
 }
 
@@ -108,7 +142,7 @@ class LabelTile extends StatefulWidget {
   LabelTile.editMode(
       {super.key,
       required,
-      this.isEditMode = true,
+      required this.isEditMode,
       required this.onChange,
       required this.onDelete,
       required this.label});
@@ -128,16 +162,29 @@ class _LabelTileState extends State<LabelTile> {
   void initState() {
     super.initState();
     isCheck = widget.isCheck;
+    isEditMode = widget.isEditMode;
+    titleController.text = widget.label.title;
   }
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      shape: !isInFocus
+          ? null
+          : const Border(
+              top: BorderSide(),
+              bottom: BorderSide(),
+            ),
       leading: !isEditMode
           ? const Icon(Icons.label_outline_rounded)
           : isInFocus
               ? IconButton(
-                  onPressed: (() {}),
+                  onPressed: (() => setState(() {
+                        isInFocus = false;
+                        widget.onDelete != null
+                            ? widget.onDelete!(widget.label)
+                            : null;
+                      })),
                   icon: const Icon(Icons.delete_outline_rounded))
               : const Icon(Icons.label_outline_rounded),
       title: FocusScope(
@@ -145,7 +192,11 @@ class _LabelTileState extends State<LabelTile> {
                 isInFocus = value;
               }),
           child: TextField(
+            maxLength: 30,
             controller: titleController,
+            readOnly: isEditMode ? false : true,
+            decoration: const InputDecoration(
+                border: InputBorder.none, counterText: ''),
           )),
       trailing: !isEditMode
           ? Checkbox(
@@ -156,7 +207,16 @@ class _LabelTileState extends State<LabelTile> {
                 });
               }))
           : isInFocus
-              ? IconButton(onPressed: (() {}), icon: const Icon(Icons.check))
+              ? IconButton(
+                  onPressed: (() => setState(() {
+                        isInFocus = false;
+                        widget.onDelete != null
+                            ? widget.onChange!(Label(
+                                title: titleController.text,
+                                id: widget.label.id))
+                            : null;
+                      })),
+                  icon: const Icon(Icons.check))
               : const Icon(Icons.edit),
     );
   }
