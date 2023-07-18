@@ -13,7 +13,7 @@ class Task {
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
   bool isPinned = false;
-  List<String> labels = [];
+  List<int> idLabels = [];
 
   Task({required this.title, required this.date, this.note, this.tasks});
 
@@ -24,7 +24,7 @@ class Task {
       required this.isPinned,
       required this.updatedAt,
       required this.createdAt,
-      required this.labels,
+      required this.idLabels,
       this.id,
       this.note,
       this.tasks});
@@ -41,11 +41,17 @@ class Task {
     map['updatedAt'] = date.toIso8601String();
     map['isCompleted'] = isCompleted ? 1 : 0;
     map['isPinned'] = isPinned ? 1 : 0;
-    map['labels'] = labels.toString();
+    map['labels'] = idLabels.join(',');
     return map;
   }
 
   static Future<Task> taskFromID(Map<String, dynamic> map) async {
+    List<int> labelid = List.from(map['labels'] == ""
+        ? []
+        : json
+            .encode(map['labels'])
+            .split(",")
+            .map((e) => int.parse(e.replaceAll(RegExp(r'"'), ""))));
     return Task.withID(
         id: map['id'],
         title: map['title'],
@@ -55,7 +61,7 @@ class Task {
         note: map['note'],
         isCompleted: map['isCompleted'] == 1 ? true : false,
         isPinned: map['isPinned'] == 1 ? true : false,
-        labels: json.encode(map['labels']).split(","),
+        idLabels: labelid,
         tasks: await DatabaseTodoHelper.instance.getTodosAssoc(map['id']));
   }
 }

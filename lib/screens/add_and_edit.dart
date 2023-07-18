@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:to_do/components/label_chips.dart';
 import 'package:to_do/components/task_list.dart';
 import 'package:intl/intl.dart';
 import 'package:to_do/screens/label.dart';
@@ -143,6 +144,10 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
                       : null
                   : null,
             ),
+          const SizedBox(
+            height: 10,
+          ),
+          LabelGridChips(labelIds: task!.idLabels),
           const SizedBox(
             height: 20,
           ),
@@ -302,8 +307,9 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
                                   onTap: () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LabelListEditMode(),
+                                        builder: (context) => LabelList(
+                                          task: task!,
+                                        ),
                                       )),
                                   child: Row(
                                     children: const [

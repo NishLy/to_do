@@ -91,10 +91,10 @@ class DatabaseTaskHelper {
     return tasks;
   }
 
-  Future<List<Task>> getTaskByLabel(String label) async {
+  Future<List<Task>> getTaskByLabel(int labelID) async {
     List<Task> tasks = [];
     for (var task in lastQueryTasks) {
-      int index = task.labels.indexOf(label);
+      int index = task.idLabels.indexOf(labelID);
       if (index != -1) tasks.add(task);
     }
     return tasks;

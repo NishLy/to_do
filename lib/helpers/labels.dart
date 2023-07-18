@@ -8,6 +8,7 @@ class DatabaseLabelHelper {
   static final DatabaseLabelHelper instance = DatabaseLabelHelper._instance();
   static Database? _db;
   DatabaseLabelHelper._instance();
+  List<Label>? lastLabelQueryCache;
 
   String labelTabel = 'labels_table';
   String colId = 'id';
@@ -17,6 +18,13 @@ class DatabaseLabelHelper {
     await db.execute(
       'CREATE TABLE $labelTabel($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colTitle TEXT NOT NULL)',
     );
+  }
+
+  Future<List<Label>> getLabelCache() async {
+    if (lastLabelQueryCache == null) {
+      await getAllLabels();
+    }
+    return lastLabelQueryCache!;
   }
 
   Future<Database> _initDb() async {
@@ -44,6 +52,7 @@ class DatabaseLabelHelper {
     for (var taskMap in taskMapList) {
       labels.add(Label.fromMap(taskMap));
     }
+    lastLabelQueryCache = labels;
     return labels;
   }
 

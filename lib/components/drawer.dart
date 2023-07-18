@@ -3,7 +3,7 @@ import 'package:to_do/helpers/labels.dart';
 import 'package:to_do/screens/label.dart';
 
 class MainDrawer extends StatefulWidget {
-  final Function(String) onChangeLabelFilter;
+  final Function(int) onChangeLabelFilter;
   const MainDrawer({super.key, required this.onChangeLabelFilter});
 
   @override
@@ -52,7 +52,7 @@ class _MainDrawerState extends State<MainDrawer> {
                                       ? selectedLabel = null
                                       : selectedLabel = index;
                                   widget.onChangeLabelFilter(
-                                      snapshot.data![index].title);
+                                      snapshot.data![index].id!);
                                 }),
                                 leading: const Icon(Icons.label_outline_sharp),
                                 title: Text(snapshot.data![index].title),

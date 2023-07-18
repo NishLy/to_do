@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:to_do/helpers/labels.dart';
+import 'package:to_do/helpers/tasks.dart';
+import 'package:to_do/model/task.dart';
 
 import '../model/label.dart';
 
@@ -129,7 +131,7 @@ class LabelTile extends StatefulWidget {
   final Label label;
   bool isCheck = false;
   Function(Label)? onChange;
-  Function(Label)? onCheckboxChange;
+  Function(int, bool)? onCheckboxChange;
   Function(Label)? onDelete;
   bool isEditMode = false;
 
@@ -204,6 +206,7 @@ class _LabelTileState extends State<LabelTile> {
               onChanged: ((value) {
                 setState(() {
                   isCheck = value!;
+                  widget.onCheckboxChange!(widget.label.id!, value);
                 });
               }))
           : isInFocus
@@ -219,5 +222,78 @@ class _LabelTileState extends State<LabelTile> {
                   icon: const Icon(Icons.check))
               : const Icon(Icons.edit),
     );
+  }
+}
+
+class LabelList extends StatefulWidget {
+  final Task task;
+  const LabelList({super.key, required this.task});
+
+  @override
+  State<LabelList> createState() => LabelListState();
+}
+
+class LabelListState extends State<LabelList> {
+  late Future<List<Label>> _labels;
+  List<int> _checkedLabels = [];
+
+  bool isNewLabelFocus = false;
+
+  TextEditingController newLabelController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkedLabels = widget.task.idLabels;
+    _labels = DatabaseLabelHelper.instance.getAllLabels();
+  }
+
+  void _onChangeCheckbox(int labelId, bool value) {
+    setState(() {
+      Task task = widget.task;
+      task.idLabels = _checkedLabels;
+      DatabaseTaskHelper.instance.updateTask(task);
+      if (value) {
+        _checkedLabels.add(labelId);
+      } else {
+        _checkedLabels.remove(labelId);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+            title: const Text("Edit Labels"),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )),
+        body: FutureBuilder(
+            future: _labels,
+            builder: ((context, snapshot) {
+              if (snapshot.hasData) {
+                return ListView.separated(
+                  itemBuilder: (context, index) => LabelTile(
+                      key: ValueKey(index),
+                      label: snapshot.data![index],
+                      onCheckboxChange: _onChangeCheckbox,
+                      isCheck: _checkedLabels.contains(snapshot.data![index].id)
+                          ? true
+                          : false),
+                  itemCount: snapshot.data!.length,
+                  separatorBuilder: (context, index) => const SizedBox(
+                    height: 5,
+                  ),
+                );
+              }
+
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            })));
   }
 }
