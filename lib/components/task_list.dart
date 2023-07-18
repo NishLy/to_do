@@ -1,6 +1,6 @@
-import 'package:to_do/model/task_list.dart';
+import 'package:to_do/model/todo.dart';
 import 'package:flutter/material.dart';
-import 'package:to_do/helpers/todo.dart';
+import 'package:to_do/helpers/todos.dart';
 
 class TodoLists extends StatefulWidget {
   final bool isEditable;

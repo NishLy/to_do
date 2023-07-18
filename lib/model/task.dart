@@ -1,5 +1,7 @@
-import 'package:to_do/model/task_list.dart';
-import 'package:to_do/helpers/todo.dart';
+import 'dart:convert';
+
+import 'package:to_do/model/todo.dart';
+import 'package:to_do/helpers/todos.dart';
 
 class Task {
   int? id;
@@ -11,6 +13,7 @@ class Task {
   DateTime createdAt = DateTime.now();
   DateTime updatedAt = DateTime.now();
   bool isPinned = false;
+  List<String> labels = [];
 
   Task({required this.title, required this.date, this.note, this.tasks});
 
@@ -21,6 +24,7 @@ class Task {
       required this.isPinned,
       required this.updatedAt,
       required this.createdAt,
+      required this.labels,
       this.id,
       this.note,
       this.tasks});
@@ -37,6 +41,7 @@ class Task {
     map['updatedAt'] = date.toIso8601String();
     map['isCompleted'] = isCompleted ? 1 : 0;
     map['isPinned'] = isPinned ? 1 : 0;
+    map['labels'] = labels.toString();
     return map;
   }
 
@@ -50,6 +55,7 @@ class Task {
         note: map['note'],
         isCompleted: map['isCompleted'] == 1 ? true : false,
         isPinned: map['isPinned'] == 1 ? true : false,
+        labels: json.encode(map['labels']).split(","),
         tasks: await DatabaseTodoHelper.instance.getTodosAssoc(map['id']));
   }
 }

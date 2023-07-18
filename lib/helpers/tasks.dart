@@ -17,6 +17,8 @@ class DatabaseTaskHelper {
   static Database? _db;
   DatabaseTaskHelper._instance();
 
+  List<Task> lastQueryTasks = [];
+
   String taskTable = 'tasks_table';
   String colId = 'id';
   String colTitle = 'title';
@@ -26,11 +28,11 @@ class DatabaseTaskHelper {
   String colCreateAt = 'createdAt';
   String colUpdatedAt = 'updatedAt';
   String colNote = 'note';
-  String labels = 'labels';
+  String colLabels = 'labels';
 
   void _createDb(Database db, int version) async {
     await db.execute(
-      'CREATE TABLE $taskTable($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colTitle TEXT,$colDate, $colIsCompleted INTEGER,$colCreateAt TEXT,$colUpdatedAt TEXT,$colIsPinned INTEGER,$colNote TEXT)',
+      'CREATE TABLE $taskTable($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colTitle TEXT,$colDate, $colIsCompleted INTEGER,$colCreateAt TEXT,$colUpdatedAt TEXT,$colIsPinned INTEGER,$colNote TEXT,$colLabels TEXT)',
     );
 
     void createTodoTable() async {
@@ -85,6 +87,16 @@ class DatabaseTaskHelper {
       tasks.add(await Task.taskFromID(taskMap));
     }
     tasks.sort(((a, b) => b.createdAt.compareTo(a.createdAt)));
+    lastQueryTasks = tasks;
+    return tasks;
+  }
+
+  Future<List<Task>> getTaskByLabel(String label) async {
+    List<Task> tasks = [];
+    for (var task in lastQueryTasks) {
+      int index = task.labels.indexOf(label);
+      if (index != -1) tasks.add(task);
+    }
     return tasks;
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:to_do/helpers/label.dart';
+import 'package:to_do/helpers/labels.dart';
+import 'package:to_do/screens/label.dart';
 
 class MainDrawer extends StatefulWidget {
   final Function(String) onChangeLabelFilter;
@@ -41,6 +42,7 @@ class _MainDrawerState extends State<MainDrawer> {
                   return Expanded(
                     child: ListView.separated(
                         padding: EdgeInsets.zero,
+                        shrinkWrap: true,
                         itemBuilder: ((context, index) => Card(
                               child: ListTile(
                                 key: ValueKey(index),
@@ -65,7 +67,15 @@ class _MainDrawerState extends State<MainDrawer> {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
-              }))
+              })),
+          ListTile(
+            leading: const Icon(Icons.add),
+            title: const Text("Create New Label"),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: ((context) => const LabelListEditMode()))),
+          )
         ],
       ),
     ));

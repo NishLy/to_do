@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:to_do/helpers/label.dart';
+import 'package:to_do/helpers/labels.dart';
 
 import '../model/label.dart';
 

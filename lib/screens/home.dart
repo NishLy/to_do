@@ -28,7 +28,11 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void _onChangeFilterLabel(String label) {}
+  void _onChangeFilterLabel(String label) {
+    setState(() {
+      _tasks = DatabaseTaskHelper.instance.getTaskByLabel(label);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,10 +54,12 @@ class _HomeState extends State<Home> {
             for (var task in snapshot.data!) {
               if (task.isPinned) {
                 pinnedTasksWidget.add(CardTask(
+                  key: ValueKey(task.id),
                   task: task,
                 ));
               } else {
                 unpinnedTaskWidget.add(CardTask(
+                  key: ValueKey(task.id),
                   task: task,
                 ));
               }
