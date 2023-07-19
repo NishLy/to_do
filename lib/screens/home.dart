@@ -3,6 +3,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:to_do/components/drawer.dart';
 import 'package:to_do/components/label_chips.dart';
 import 'package:to_do/components/task_list.dart';
+import 'package:to_do/helpers/account.dart';
 import 'package:to_do/helpers/tasks.dart';
 import 'package:to_do/model/task.dart';
 import 'package:to_do/screens/account.dart';
@@ -42,12 +43,19 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: const Text("Todos"),
         actions: [
-          CircleAvatar(
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).push(AccountPopup()),
-              child: const Text("G"),
-            ),
-          ),
+          FutureBuilder(
+              future: AccountHelper.instance.getUserData(),
+              builder: ((context, snapshot) => CircleAvatar(
+                    backgroundImage: snapshot.hasData
+                        ? NetworkImage(snapshot.data!.photoURL ?? '')
+                        : null,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).push(AccountPopup()),
+                      child: snapshot.hasData
+                          ? null
+                          : const Icon(Icons.person_outline_rounded),
+                    ),
+                  ))),
           const SizedBox(
             width: 10,
           )

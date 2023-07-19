@@ -116,9 +116,17 @@ class DatabaseTaskHelper {
     return id;
   }
 
-  Future<int> insertTask(Task task) async {
+  Future<int> insert(Task task) async {
     Database db = await this.db;
     final int result = await db.insert(taskTable, task.toMap());
+    return result;
+  }
+
+  Future<int> insertBatch(List<Task> tasks) async {
+    int result = 0;
+    for (var task in tasks) {
+      result = result + await insert(task);
+    }
     return result;
   }
 

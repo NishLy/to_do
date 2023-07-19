@@ -53,9 +53,27 @@ class DatabaseTodoHelper {
     return todos;
   }
 
-  Future<int> insertTask(Todo task) async {
+  Future<List<Todo>> getTodos() async {
+    Database db = await this.db;
+    List<Map<String, dynamic>> todosMap = await db.query(todoTable);
+    final List<Todo> todos = [];
+    for (var todoMap in todosMap) {
+      todos.add(Todo.fromMap(todoMap));
+    }
+    return todos;
+  }
+
+  Future<int> insert(Todo task) async {
     Database db = await this.db;
     final int result = await db.insert(todoTable, task.toMap());
+    return result;
+  }
+
+  Future<int> insertBatch(List<Todo> todos) async {
+    int result = 0;
+    for (var todo in todos) {
+      result = result + await insert(todo);
+    }
     return result;
   }
 

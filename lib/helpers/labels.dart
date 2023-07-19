@@ -56,9 +56,17 @@ class DatabaseLabelHelper {
     return labels;
   }
 
-  Future<int> insertLabel(Label task) async {
+  Future<int> insert(Label task) async {
     Database db = await this.db;
     final int result = await db.insert(labelTabel, task.toMap());
+    return result;
+  }
+
+  Future<int> insertBatch(List<Label> labels) async {
+    int result = 0;
+    for (var label in labels) {
+      result = result + await insert(label);
+    }
     return result;
   }
 

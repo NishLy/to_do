@@ -61,7 +61,7 @@ class _TodoListsState extends State<TodoLists> {
       isChecked: false,
     );
 
-    int result = await DatabaseTodoHelper.instance.insertTask(todo);
+    int result = await DatabaseTodoHelper.instance.insert(todo);
 
     List<Todo> newTodo = todos;
 

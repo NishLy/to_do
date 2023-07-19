@@ -47,7 +47,7 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
       date: DateTime.now(),
       note: newNoteController.text.isNotEmpty ? newNoteController.text : null,
     );
-    int result = await DatabaseTaskHelper.instance.insertTask(newTask);
+    int result = await DatabaseTaskHelper.instance.insert(newTask);
     if (result != 0) {
       task = newTask;
       taskId = await DatabaseTaskHelper.instance.getLastRowId();

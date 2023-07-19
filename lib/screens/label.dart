@@ -41,7 +41,7 @@ class _LabelListState extends State<LabelListEditMode> {
 
   void _onCreteLabel(Label label) {
     setState(() {
-      DatabaseLabelHelper.instance.insertLabel(label);
+      DatabaseLabelHelper.instance.insert(label);
       _labels = DatabaseLabelHelper.instance.getAllLabels();
       isNewLabelFocus = false;
       newLabelController.text = "";
