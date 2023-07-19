@@ -91,6 +91,15 @@ class DatabaseTaskHelper {
     return tasks;
   }
 
+  Future<Task?> getTaskById(int? id) async {
+    if (id == null) return null;
+    Database db = await this.db;
+    final map =
+        await db.rawQuery("SELECT * FROM $taskTable WHERE id = $id LIMIT 1");
+    final Task task = await Task.taskFromID(map.first);
+    return task;
+  }
+
   Future<List<Task>> getTaskByLabel(int labelID) async {
     List<Task> tasks = [];
     for (var task in lastQueryTasks) {

@@ -7,8 +7,8 @@ import '../helpers/tasks.dart';
 import '../model/task.dart';
 
 class AddAndEditTask extends StatefulWidget {
-  final Task? task;
-  const AddAndEditTask({super.key, this.task});
+  final int? taskId;
+  const AddAndEditTask({super.key, this.taskId});
 
   @override
   State<AddAndEditTask> createState() => _AddAndEditTaskState();
@@ -17,27 +17,27 @@ class AddAndEditTask extends StatefulWidget {
 class _AddAndEditTaskState extends State<AddAndEditTask> {
   TextEditingController newTitleController = TextEditingController();
   TextEditingController newNoteController = TextEditingController();
-  bool isNote = true;
+
+  late Future<Task?> _task;
+  bool isNote = false;
   bool isTodos = false;
-  int? idTask;
+  int? taskId;
   Task? task;
+
   int indexNav = 0;
 
   @override
   void initState() {
     super.initState();
-    if (widget.task != null) {
-      idTask = widget.task!.id;
-      task = widget.task;
-      setState(() {
-        newTitleController.text = task?.title != null ? task!.title! : "";
-        newNoteController.text = task?.note != null ? task!.note! : "";
-        isTodos = task!.tasks != null ? true : false;
-        isNote = (widget.task!.note != null && widget.task!.note!.isNotEmpty)
-            ? true
-            : false;
-      });
-    }
+    _task = DatabaseTaskHelper.instance.getTaskById(widget.taskId);
+  }
+
+  void updateData() {
+    setState(() {
+      if (widget.taskId != null) {
+        _task = DatabaseTaskHelper.instance.getTaskById(widget.taskId);
+      }
+    });
   }
 
   Future<int?> _createTask() async {
@@ -50,23 +50,18 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
     int result = await DatabaseTaskHelper.instance.insertTask(newTask);
     if (result != 0) {
       task = newTask;
-      idTask = await DatabaseTaskHelper.instance.getLastRowId();
+      taskId = await DatabaseTaskHelper.instance.getLastRowId();
     }
-    return idTask;
+    return taskId;
   }
 
   Future<void> _updateTask(Task task) async {
     task.updatedAt = DateTime.now();
     task.title =
         newTitleController.text.isNotEmpty ? newTitleController.text : null;
-
     task.note =
         newNoteController.text.isNotEmpty ? newNoteController.text : null;
-
-    int result = await DatabaseTaskHelper.instance.updateTask(task);
-    setState(() {
-      if (result != 0) task = task;
-    });
+    DatabaseTaskHelper.instance.updateTask(task);
   }
 
   @override
@@ -97,70 +92,92 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
                     : Icons.push_pin_outlined))
           ],
         ),
-        body: ListView(padding: const EdgeInsets.all(15), children: [
-          TextField(
-            decoration: const InputDecoration(
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                hintText: "Title",
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)))),
-            controller: newTitleController,
-            onSubmitted: (value) =>
-                idTask != null ? _updateTask(task!) : _createTask(),
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          if (isNote)
-            Expanded(
-              child: TextField(
-                decoration: const InputDecoration(
-                    hintText: "note",
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)))
+        body: FutureBuilder(
+            future: _task,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
 
-                    // InputBorder(borderSide: BorderSide(color: Colors.black38)),
+              task = snapshot.data;
+
+              if (task != null) {
+                taskId = task!.id;
+                newTitleController.text =
+                    task?.title != null ? task!.title! : "";
+                newNoteController.text = task?.note != null ? task!.note! : "";
+
+                if (!isNote && !isTodos) {
+                  isTodos = task!.tasks != null ? true : false;
+                  isNote = (task!.note != null && task!.note!.isNotEmpty)
+                      ? true
+                      : false;
+                }
+              }
+
+              return ListView(padding: const EdgeInsets.all(15), children: [
+                TextField(
+                  decoration: const InputDecoration(
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      hintText: "Title",
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)))),
+                  controller: newTitleController,
+                  onSubmitted: (value) =>
+                      taskId != null ? _updateTask(task!) : _createTask(),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                if (isNote)
+                  Expanded(
+                    child: FocusScope(
+                      onFocusChange: (value) {
+                        if (!value) {
+                          taskId != null ? _updateTask(task!) : _createTask();
+                        }
+                      },
+                      child: TextField(
+                        decoration: const InputDecoration(
+                            hintText: "note",
+                            border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10)))),
+                        keyboardType: TextInputType.multiline,
+                        controller: newNoteController,
+                        maxLines: null,
+                        minLines: 1,
+                      ),
                     ),
-                onChanged: (value) => setState(() {}),
-                keyboardType: TextInputType.multiline,
-                controller: newNoteController,
-                maxLines: null,
-                minLines: 1,
-              ),
-            ),
-          const SizedBox(
-            height: 10,
-          ),
-          if (isTodos)
-            TodoLists(
-              isEditable: true,
-              idTask: task != null ? task!.id : null,
-              onCreateTodo: _createTask,
-              list: task != null
-                  ? task!.tasks != null
-                      ? task!.tasks!
-                      : null
-                  : null,
-            ),
-          const SizedBox(
-            height: 10,
-          ),
-          if (task != null) LabelGridChips(labelIds: task!.idLabels),
-          const SizedBox(
-            height: 20,
-          ),
-          if (isNote)
-            MaterialButton(
-              color: Colors.blueAccent,
-              onPressed: (() {
-                idTask != null ? _updateTask(task!) : _createTask();
-                Navigator.of(context).pop();
-              }),
-              child: const Text('Save'),
-            )
-        ]),
+                  ),
+                const SizedBox(
+                  height: 10,
+                ),
+                if (isTodos)
+                  TodoLists(
+                    isEditable: true,
+                    idTask: task != null ? task!.id : null,
+                    onCreateTodo: _createTask,
+                    list: task != null
+                        ? task!.tasks != null
+                            ? task!.tasks!
+                            : null
+                        : null,
+                  ),
+                const SizedBox(
+                  height: 10,
+                ),
+                if (task != null) LabelGridChips(labelIds: task!.idLabels),
+                const SizedBox(
+                  height: 20,
+                ),
+              ]);
+            }),
         bottomNavigationBar: Container(
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -309,6 +326,7 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
                                       MaterialPageRoute(
                                         builder: (context) => LabelList(
                                           task: task!,
+                                          onUpdate: updateData,
                                         ),
                                       )),
                                   child: Row(

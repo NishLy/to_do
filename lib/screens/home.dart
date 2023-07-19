@@ -144,7 +144,7 @@ class CardTask extends StatelessWidget {
           context,
           MaterialPageRoute(
               builder: ((context) => AddAndEditTask(
-                    task: task,
+                    taskId: task.id!,
                   )))),
       child: Card(
           elevation: 0,

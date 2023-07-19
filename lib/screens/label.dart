@@ -227,7 +227,8 @@ class _LabelTileState extends State<LabelTile> {
 
 class LabelList extends StatefulWidget {
   final Task task;
-  const LabelList({super.key, required this.task});
+  final Function()? onUpdate;
+  const LabelList({super.key, required this.task, this.onUpdate});
 
   @override
   State<LabelList> createState() => LabelListState();
@@ -269,6 +270,9 @@ class LabelListState extends State<LabelList> {
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () {
+                if (widget.onUpdate != null) {
+                  widget.onUpdate!();
+                }
                 Navigator.of(context).pop();
               },
             )),
