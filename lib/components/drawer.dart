@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:to_do/helpers/labels.dart';
 import 'package:to_do/screens/label.dart';
+import 'package:to_do/screens/setting.dart';
 
 class MainDrawer extends StatefulWidget {
   final Function(int) onChangeLabelFilter;
@@ -75,6 +76,12 @@ class _MainDrawerState extends State<MainDrawer> {
                 context,
                 MaterialPageRoute(
                     builder: ((context) => const LabelListEditMode()))),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text("Settings"),
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: ((context) => const Settings()))),
           )
         ],
       ),

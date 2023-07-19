@@ -5,6 +5,7 @@ import 'package:to_do/components/label_chips.dart';
 import 'package:to_do/components/task_list.dart';
 import 'package:to_do/helpers/tasks.dart';
 import 'package:to_do/model/task.dart';
+import 'package:to_do/screens/account.dart';
 import 'package:to_do/screens/add_and_edit.dart';
 
 class Home extends StatefulWidget {
@@ -38,7 +39,20 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Todos")),
+      appBar: AppBar(
+        title: const Text("Todos"),
+        actions: [
+          CircleAvatar(
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).push(AccountPopup()),
+              child: const Text("G"),
+            ),
+          ),
+          const SizedBox(
+            width: 10,
+          )
+        ],
+      ),
       body: FutureBuilder(
         future: _tasks,
         builder: (context, snapshot) {

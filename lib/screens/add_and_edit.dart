@@ -147,7 +147,7 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
           const SizedBox(
             height: 10,
           ),
-          LabelGridChips(labelIds: task!.idLabels),
+          if (task != null) LabelGridChips(labelIds: task!.idLabels),
           const SizedBox(
             height: 20,
           ),
