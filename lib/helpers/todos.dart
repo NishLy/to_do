@@ -97,4 +97,10 @@ class DatabaseTodoHelper {
     );
     return result;
   }
+
+  Future<int> deleteAllTodo() async {
+    Database db = await this.db;
+    final int result = await db.delete(todoTable);
+    return result;
+  }
 }

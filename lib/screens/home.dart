@@ -18,6 +18,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   Future<List<Task>>? _tasks;
+  int? filteredLabelId;
 
   @override
   void initState() {
@@ -31,8 +32,13 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void _onChangeFilterLabel(int labelId) {
+  void _onChangeFilterLabel(int? labelId) {
     setState(() {
+      filteredLabelId = labelId;
+      if (labelId == null) {
+        _tasks = DatabaseTaskHelper.instance.getTaskList();
+        return;
+      }
       _tasks = DatabaseTaskHelper.instance.getTaskByLabel(labelId);
     });
   }
@@ -61,104 +67,128 @@ class _HomeState extends State<Home> {
           )
         ],
       ),
-      body: FutureBuilder(
-        future: _tasks,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data!.isEmpty) {
-              return const Center(
-                child: Text("No Tasks"),
-              );
-            }
-
-            List<Widget> pinnedTasksWidget = [];
-            List<Widget> unpinnedTaskWidget = [];
-
-            for (var task in snapshot.data!) {
-              if (task.isPinned) {
-                pinnedTasksWidget.add(CardTask(
-                  key: ValueKey(task.id),
-                  task: task,
-                ));
-              } else {
-                unpinnedTaskWidget.add(CardTask(
-                  key: ValueKey(task.id),
-                  task: task,
-                ));
+      body: RefreshIndicator(
+        onRefresh: _updateTaskList,
+        child: FutureBuilder(
+          future: _tasks,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              if (snapshot.data!.isEmpty) {
+                return ListView(
+                  children: const [
+                    ListTile(
+                      title: Text("No Tasks"),
+                    )
+                  ],
+                );
               }
-            }
 
-            return RefreshIndicator(
-                onRefresh: _updateTaskList,
-                child: ListView(padding: const EdgeInsets.all(10), children: [
-                  if (pinnedTasksWidget.isNotEmpty)
-                    Container(
-                      margin: const EdgeInsets.all(10),
-                      child: const Text(
-                        "Pinned",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+              List<Widget> pinnedTasksWidget = [];
+              List<Widget> unpinnedTaskWidget = [];
+
+              for (var task in snapshot.data!) {
+                if (task.isPinned) {
+                  pinnedTasksWidget.add(CardTask(
+                    key: ValueKey(task.id),
+                    onLeave: _updateTaskList,
+                    task: task,
+                  ));
+                } else {
+                  unpinnedTaskWidget.add(CardTask(
+                    key: ValueKey(task.id),
+                    onLeave: _updateTaskList,
+                    task: task,
+                  ));
+                }
+              }
+
+              return ListView(padding: const EdgeInsets.all(10), children: [
+                if (pinnedTasksWidget.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.all(10),
+                    child: const Text(
+                      "Pinned",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  if (pinnedTasksWidget.isNotEmpty)
-                    StaggeredGrid.count(
-                        key: ValueKey(pinnedTasksWidget.length),
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 4,
-                        crossAxisSpacing: 4,
-                        children: pinnedTasksWidget),
-                  if (unpinnedTaskWidget.isNotEmpty)
-                    Container(
-                      margin: const EdgeInsets.all(10),
-                      child: const Text(
-                        "Others",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                  ),
+                if (pinnedTasksWidget.isNotEmpty)
+                  StaggeredGrid.count(
+                      key: ValueKey(pinnedTasksWidget.length),
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 4,
+                      crossAxisSpacing: 4,
+                      children: pinnedTasksWidget),
+                if (unpinnedTaskWidget.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.all(10),
+                    child: const Text(
+                      "Others",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  if (unpinnedTaskWidget.isNotEmpty)
-                    StaggeredGrid.count(
-                        key: ValueKey(unpinnedTaskWidget.length),
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 4,
-                        crossAxisSpacing: 4,
-                        children: unpinnedTaskWidget)
-                ]));
-          }
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        },
+                  ),
+                if (unpinnedTaskWidget.isNotEmpty)
+                  StaggeredGrid.count(
+                      key: ValueKey(unpinnedTaskWidget.length),
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 4,
+                      crossAxisSpacing: 4,
+                      children: unpinnedTaskWidget)
+              ]);
+            }
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            await Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const AddAndEditTask()));
+
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              ),
+              content: const Text("Successfully Adding Data"),
+            ));
+            _updateTaskList();
           },
           child: const Icon(Icons.add)),
-      drawer: MainDrawer(onChangeLabelFilter: _onChangeFilterLabel),
+      drawer: MainDrawer(
+          onChangeLabelFilter: _onChangeFilterLabel,
+          seletedId: filteredLabelId),
     );
   }
 }
 
 class CardTask extends StatelessWidget {
   final Task task;
-  const CardTask({super.key, required this.task});
+  final Function() onLeave;
+  const CardTask({super.key, required this.task, required this.onLeave});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: ((context) => AddAndEditTask(
-                    taskId: task.id!,
-                  )))),
+      onTap: (() async {
+        await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: ((context) => AddAndEditTask(
+                      taskId: task.id!,
+                    ))));
+        onLeave();
+        // ignore: use_build_context_synchronously
+      }),
       child: Card(
           elevation: 0,
           shape: const RoundedRectangleBorder(
             side: BorderSide(
-              color: Colors.black,
+              color: Colors.black38,
             ),
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),

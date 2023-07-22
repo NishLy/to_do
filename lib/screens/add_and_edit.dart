@@ -118,18 +118,30 @@ class _AddAndEditTaskState extends State<AddAndEditTask> {
               }
 
               return ListView(padding: const EdgeInsets.all(15), children: [
-                TextField(
-                  decoration: const InputDecoration(
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                      hintText: "Title",
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)))),
-                  controller: newTitleController,
-                  onSubmitted: (value) =>
-                      taskId != null ? _updateTask(task!) : _createTask(),
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+                FocusScope(
+                  onFocusChange: (value) async {
+                    if (!value) {
+                      task =
+                          await DatabaseTaskHelper.instance.getTaskById(taskId);
+                      setState(() {
+                        taskId != null ? _updateTask(task!) : _createTask();
+                      });
+                    }
+                  },
+                  child: TextField(
+                    decoration: const InputDecoration(
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                        hintText: "Title",
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10)))),
+                    controller: newTitleController,
+                    onSubmitted: (value) =>
+                        taskId != null ? _updateTask(task!) : _createTask(),
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                 ),
                 const SizedBox(
                   height: 10,

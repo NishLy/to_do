@@ -1,3 +1,4 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:to_do/model/todo.dart';
 import 'package:flutter/material.dart';
 import 'package:to_do/helpers/todos.dart';
@@ -49,6 +50,14 @@ class _TodoListsState extends State<TodoLists> {
     });
   }
 
+  void _updateTodos() async {
+    List<Todo>? newTodos =
+        await DatabaseTodoHelper.instance.getTodosAssoc(idTask!);
+    setState(() {
+      todos = newTodos ?? [];
+    });
+  }
+
   void _createTodo() async {
     if (idTask == null && widget.onCreateTodo != null) {
       int? createdTaskId = await widget.onCreateTodo!();
@@ -78,107 +87,105 @@ class _TodoListsState extends State<TodoLists> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-          border: Border.fromBorderSide(
-              BorderSide(width: 1, color: Colors.black38)),
-          borderRadius: BorderRadius.all(Radius.circular(10))),
-      padding: const EdgeInsets.all(10),
-      child: Builder(builder: (context) {
-        List checkedTodos =
-            List.from(todos.where((element) => element.isChecked == true));
-        List uncheckedTodos =
-            List.from(todos.where((element) => element.isChecked == false));
-        return Column(children: [
+    return Builder(builder: (context) {
+      List checkedTodos =
+          List.from(todos.where((element) => element.isChecked == true));
+      List uncheckedTodos =
+          List.from(todos.where((element) => element.isChecked == false));
+
+      return Column(children: [
+        SizedBox(
+            child: ListView.separated(
+                itemCount: uncheckedTodos.length,
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                separatorBuilder: (context, index) => const SizedBox(
+                      height: 5,
+                    ),
+                itemBuilder: (context, index) {
+                  return TodoField(
+                      key: ValueKey(uncheckedTodos[index].id),
+                      index: index,
+                      onDeleteTodo: _updateTodos,
+                      isReadonly: widget.isEditable ? true : false,
+                      todo: uncheckedTodos[index],
+                      onChangeTodoTitle: _onChangeTodoTitle,
+                      onChangeTodoStatus: _onChangeStatusTodo);
+                })),
+        if (checkedTodos.isNotEmpty)
+          GestureDetector(
+              onTap: () => setState(() {
+                    showChecked = !showChecked;
+                  }),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(showChecked
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Text('${checkedTodos.length} Ticked Item'),
+                ],
+              )),
+        if (checkedTodos.isNotEmpty && showChecked)
           SizedBox(
               child: ListView.separated(
-                  itemCount: uncheckedTodos.length,
+                  itemCount: checkedTodos.length,
+                  physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
                   separatorBuilder: (context, index) => const SizedBox(
                         height: 5,
                       ),
                   itemBuilder: (context, index) {
+                    TextEditingController oldTaskController =
+                        TextEditingController();
+                    oldTaskController.text = checkedTodos[index].title;
                     return TodoField(
-                        key: ValueKey(uncheckedTodos[index].id),
+                        key: ValueKey(checkedTodos[index].id),
                         index: index,
+                        onDeleteTodo: _updateTodos,
                         isReadonly: widget.isEditable ? true : false,
-                        todo: uncheckedTodos[index],
+                        todo: checkedTodos[index],
                         onChangeTodoTitle: _onChangeTodoTitle,
                         onChangeTodoStatus: _onChangeStatusTodo);
                   })),
-          if (checkedTodos.isNotEmpty)
-            GestureDetector(
-                onTap: () => setState(() {
-                      showChecked = !showChecked;
-                    }),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(showChecked
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Text('${checkedTodos.length} Ticked Item'),
-                  ],
+        if (widget.isEditable)
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 20,
+                  child: Icon(Icons.add),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                    child: TextField(
+                  decoration:
+                      const InputDecoration.collapsed(hintText: "Add New Task"),
+                  maxLines: null,
+                  readOnly: widget.isEditable ? false : true,
+                  controller: newTaskController,
+                  keyboardType: TextInputType.text,
+                  onSubmitted: (value) => _createTodo(),
+                  minLines: 1,
                 )),
-          if (checkedTodos.isNotEmpty && showChecked)
-            SizedBox(
-                child: ListView.separated(
-                    itemCount: checkedTodos.length,
-                    shrinkWrap: true,
-                    separatorBuilder: (context, index) => const SizedBox(
-                          height: 5,
-                        ),
-                    itemBuilder: (context, index) {
-                      TextEditingController oldTaskController =
-                          TextEditingController();
-                      oldTaskController.text = checkedTodos[index].title;
-                      return TodoField(
-                          key: ValueKey(checkedTodos[index].id),
-                          index: index,
-                          isReadonly: widget.isEditable ? true : false,
-                          todo: checkedTodos[index],
-                          onChangeTodoTitle: _onChangeTodoTitle,
-                          onChangeTodoStatus: _onChangeStatusTodo);
-                    })),
-          if (widget.isEditable)
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(
-                    width: 20,
-                    child: Icon(Icons.add),
-                  ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Expanded(
-                      child: TextField(
-                    decoration: const InputDecoration.collapsed(
-                        hintText: "Add New Task"),
-                    maxLines: null,
-                    readOnly: widget.isEditable ? false : true,
-                    controller: newTaskController,
-                    keyboardType: TextInputType.text,
-                    onSubmitted: (value) => _createTodo(),
-                    minLines: 1,
-                  )),
-                  if (newTaskController.text.isNotEmpty)
-                    IconButton(
-                        onPressed: () => _createTodo(),
-                        icon: const Icon(Icons.check))
-                ],
-              ),
-            )
-        ]);
-      }),
-    );
+                if (newTaskController.text.isNotEmpty)
+                  IconButton(
+                      onPressed: () => _createTodo(),
+                      icon: const Icon(Icons.check))
+              ],
+            ),
+          )
+      ]);
+    });
   }
 }
 
@@ -189,6 +196,7 @@ class TodoField extends StatefulWidget {
 
   final void Function(Todo) onChangeTodoStatus;
   final void Function(Todo) onChangeTodoTitle;
+  final void Function() onDeleteTodo;
 
   const TodoField({
     super.key,
@@ -197,6 +205,7 @@ class TodoField extends StatefulWidget {
     required this.onChangeTodoStatus,
     required this.onChangeTodoTitle,
     required this.index,
+    required this.onDeleteTodo,
   });
 
   @override
@@ -257,7 +266,16 @@ class _TodoFieldState extends State<TodoField> {
               : const TextStyle(
                   overflow: TextOverflow.ellipsis,
                   decoration: TextDecoration.lineThrough),
-        ))
+        )),
+        if (widget.isReadonly)
+          IconButton(
+              onPressed: (() {
+                setState(() {
+                  DatabaseTodoHelper.instance.deleteTask(todo.id!);
+                  widget.onDeleteTodo();
+                });
+              }),
+              icon: const Icon(Icons.close_rounded))
       ],
     );
   }

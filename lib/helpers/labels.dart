@@ -90,4 +90,10 @@ class DatabaseLabelHelper {
     );
     return result;
   }
+
+  Future<int> deleteAllLabel() async {
+    Database db = await this.db;
+    final int result = await db.delete(labelTabel);
+    return result;
+  }
 }
